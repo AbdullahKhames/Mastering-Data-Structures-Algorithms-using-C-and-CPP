@@ -2,18 +2,17 @@
 #define MAIN_H
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
-using namespace std;
-
-typedef struct Array
+typedef struct ArrayStruct
 {
     int *arr;
     int length;
     int size;
 } Array;
 
-void init(Array *arr, int size);
-void init(int *array, int size, int oldArray[], int oldSize);
+void init(Array **arr, int size, int allZeros);
+void init(int *array, int size, int oldArray[], int oldSize, int allZeros);
 void display(Array *arr);
 void add(Array *arr, int x);
 void doubleGrow(Array *arr);
@@ -38,5 +37,18 @@ void rightRotate(Array *array);
 void swap(int *arr, int i, int j);
 void insert(Array *arr, int x);
 int isSorted(Array *arr);
+void reArrange(Array *arr);
+Array *mergeTwoSortedArrays(Array *array1, Array *array2);
+Array *unionMerged(Array *array1, Array *array2);
+Array *intersectionMerged(Array *array1, Array *array2);
+Array *differenceMerged(Array *array1, Array *array2);
+void findMissingSorted(Array *array);
+void findMultipleMissingSorted(Array *array);
+void findMultipleMissingNotSorted(Array *array);
 
+void findDuplicatesSorted(Array *array);
+void findAndCountMultipleDuplicatesSorted(Array *array);
+void findAndCountMultipleDuplicatesNotSorted(Array *array);
+
+void printPairTOSum(Array arr, int k);
 #endif

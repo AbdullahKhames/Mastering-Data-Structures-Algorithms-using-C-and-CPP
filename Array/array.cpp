@@ -7,13 +7,16 @@
  * @array: the array struct to be initialized
  *          the length will be 0 and size will be size var
  * @size: the size to assign to the array
+ * @allZeros: if 0 it won't initialize to 0 but will initialize all to be INT_MIN
+ *              else if equal to 0 it will initialize all to elements to equal 0
  */
-void init(Array *array, int size)
+void init(Array **array, int size, int allZeros)
 {
-    array->arr = (int *)malloc(sizeof(int) * size);
-    init(array->arr, size, NULL, NULL);
-    array->size = size;
-    array->length = 0;
+    *array = (Array *)malloc(sizeof(Array));
+    (*array)->arr = (int *)malloc(sizeof(int) * size);
+    init((*array)->arr, size, NULL, NULL, allZeros);
+    (*array)->size = size;
+    (*array)->length = 0;
 }
 /**
  * init: helper function to initialize each index of the array either to INT_MIN
@@ -24,14 +27,23 @@ void init(Array *array, int size)
  * @size: the size to assign to the array
  * @oldArray: the old array to copy items from
  * @oldSize: the length of the old array to be copied from
+ * @allZeros: if 0 it won't initialize to 0 but will initialize all to be INT_MIN
+ *              else if equal to 0 it will initialize all to elements to equal 0
  */
-void init(int *array, int size, int oldArray[], int oldSize)
+void init(int *array, int size, int oldArray[], int oldSize, int allZeros)
 {
     if (!oldArray)
     {
         for (int i = 0; i < size; i++)
         {
-            array[i] = INT_MIN;
+            if (allZeros == 0)
+            {
+                array[i] = INT_MIN;
+            }
+            else
+            {
+                array[i] = 0;
+            }
         }
     }
     else
@@ -41,6 +53,10 @@ void init(int *array, int size, int oldArray[], int oldSize)
             if (i < oldSize)
             {
                 array[i] = oldArray[i];
+            }
+            if (i >= oldSize && allZeros == 1)
+            {
+                array[i] = 0;
             }
             else
             {
@@ -94,7 +110,7 @@ void doubleGrow(Array *array)
     int *oldArr = array->arr;
     int *newArr = (int *)malloc(sizeof(int) * size);
     array->arr = newArr;
-    init(newArr, size, oldArr, array->size);
+    init(newArr, size, oldArr, array->size, 0);
     array->size = size;
 }
 
@@ -471,6 +487,7 @@ void insert(Array *arr, int x)
     // arr->arr[i + 1] = x;
     // arr->length++;
 }
+
 /**
  * isSorted: a function to check if an array is sorted or not
  * @arr: the array to be checked
@@ -496,4 +513,179 @@ int isSorted(Array *arr)
         }
     }
     return 1;
+}
+
+/**
+ * reArrange re arranges an array to have all of its negative numbers on the left
+ *          and the positive on the right
+ * @arr: array to be arranged
+ */
+void reArrange(Array *arr)
+{
+    int left = 0, right = arr->length - 1;
+    while (left < right)
+    {
+        while (arr->arr[left] < 0)
+        {
+            left++;
+        }
+        while (arr->arr[right] >= 0)
+        {
+            right--;
+        }
+        if (left < right)
+        {
+            swap(arr->arr, left, right);
+        }
+    }
+}
+
+/**
+ * mergeTwoSortedArrays: merges two sorted array into a new merged sorted array
+ *                          keeping the original sorting
+ * @array1: the first array
+ * @array2: the second array
+ * return: returns the newly created array holder
+ */
+Array *mergeTwoSortedArrays(Array *array1, Array *array2)
+{
+    Array *newArray;
+    int size = array1->size + array2->size;
+    int length = array1->length + array2->length;
+    init(&newArray, size, 0);
+    newArray->length = length;
+
+    int firstArrayIdx = 0, secondArrayIdx = 0, newArrayIdx = 0;
+
+    while (firstArrayIdx < array1->length && secondArrayIdx < array2->length)
+    {
+        if (array1->arr[firstArrayIdx] <= array2->arr[secondArrayIdx])
+        {
+            newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+        }
+        else
+        {
+            newArray->arr[newArrayIdx++] = array2->arr[secondArrayIdx++];
+        }
+    }
+
+    while (firstArrayIdx < array1->length)
+    {
+        newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+    }
+    while (secondArrayIdx < array2->length)
+    {
+        newArray->arr[newArrayIdx++] = array2->arr[secondArrayIdx++];
+    }
+    return newArray;
+}
+/**
+ * unionMerged: finds the union between the two arrays
+ * @array1: the first array
+ * @array2: the second array
+ * return: returns the newly created array holder
+ */
+Array *unionMerged(Array *array1, Array *array2)
+{
+    Array *newArray;
+    int size = array1->size + array2->size;
+    init(&newArray, size, 0);
+
+    int firstArrayIdx = 0, secondArrayIdx = 0, newArrayIdx = 0;
+
+    while (firstArrayIdx < array1->length && secondArrayIdx < array2->length)
+    {
+        if (array1->arr[firstArrayIdx] < array2->arr[secondArrayIdx])
+        {
+            newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+        }
+        else if (array1->arr[firstArrayIdx] > array2->arr[secondArrayIdx])
+        {
+            newArray->arr[newArrayIdx++] = array2->arr[secondArrayIdx++];
+        }
+        else
+        {
+            newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+            secondArrayIdx++;
+        }
+    }
+
+    while (firstArrayIdx < array1->length)
+    {
+        newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+    }
+    while (secondArrayIdx < array2->length)
+    {
+        newArray->arr[newArrayIdx++] = array2->arr[secondArrayIdx++];
+    }
+    newArray->length = newArrayIdx;
+
+    return newArray;
+}
+/**
+ * intersectionMerged: finds the intersection between two sorted sets
+ * @array1: the first array
+ * @array2: the second array
+ * return: returns the newly created array holder
+ */
+Array *intersectionMerged(Array *array1, Array *array2)
+{
+    Array *newArray;
+    int size = array1->size + array2->size;
+    init(&newArray, size, 0);
+
+    int firstArrayIdx = 0, secondArrayIdx = 0, newArrayIdx = 0;
+    while (firstArrayIdx < array1->length && secondArrayIdx < array2->length)
+    {
+        if (array1->arr[firstArrayIdx] == array2->arr[secondArrayIdx])
+        {
+            newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+            secondArrayIdx++;
+        }
+        else
+        {
+            firstArrayIdx++;
+            secondArrayIdx++;
+        }
+    }
+
+    newArray->length = newArrayIdx;
+    return newArray;
+}
+/**
+ * differenceMerged: finds the difference between two sorted sets
+ * @array1: the first array
+ * @array2: the second array
+ * return: returns the newly created array holder
+ */
+Array *differenceMerged(Array *array1, Array *array2)
+{
+    Array *newArray;
+    int size = array1->size + array2->size;
+    init(&newArray, size, 0);
+
+    int firstArrayIdx = 0, secondArrayIdx = 0, newArrayIdx = 0;
+    while (firstArrayIdx < array1->length && secondArrayIdx < array2->length)
+    {
+        if (array1->arr[firstArrayIdx] == array2->arr[secondArrayIdx])
+        {
+            firstArrayIdx++;
+            secondArrayIdx++;
+        }
+        else if (array1->arr[firstArrayIdx] < array2->arr[secondArrayIdx])
+        {
+            newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+        }
+        else
+        {
+            secondArrayIdx++;
+        }
+    }
+    while (firstArrayIdx < array1->length)
+    {
+        newArray->arr[newArrayIdx++] = array1->arr[firstArrayIdx++];
+    }
+
+    newArray->length = newArrayIdx;
+    return newArray;
 }
